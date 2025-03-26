@@ -8,12 +8,11 @@ Author: SENAMHI
 """
 
 import s3fs
-import pytz
 import numpy as np
 import concurrent.futures
 
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import List, Optional, Tuple, Union, Any
 
 # Default parameters
@@ -90,7 +89,7 @@ class GoesAWSDownloader:
             ValueError: If date format is invalid or dates are invalid
         """
         if date is None:
-            now = datetime.now(pytz.utc) - timedelta(minutes=TIME_DELAY)
+            now = datetime.now(UTC) - timedelta(minutes=TIME_DELAY)
             now = now.replace(
                 minute=now.minute - now.minute % 10,
                 second=0,
@@ -150,7 +149,7 @@ class GoesAWSDownloader:
         Returns:
             np.ndarray: Array of available file paths or None if no files found
         """
-        if self.start_date > datetime.now(pytz.utc).replace(tzinfo=None):
+        if self.start_date.replace(tzinfo=None) > datetime.now(UTC).replace(tzinfo=None):
             print("\t[ ERROR ] Fecha ingresada mayor a la actual.")
             return None
 
@@ -211,7 +210,7 @@ class GoesAWSDownloader:
                 file_date = datetime.strptime(f"{year}{day_of_year}{hour}{minute}",
                                               "%Y%j%H%M")
                 
-                if (self.start_date <= file_date <= self.end_date and total_minutes % interval == 0):  # Verificar si cae en el intervalo deseado
+                if (self.start_date.replace(tzinfo=None) <= file_date <= self.end_date.replace(tzinfo=None) and total_minutes % interval == 0):  # Verificar si cae en el intervalo deseado
                     filtered_files.append(file)
 
         return np.array(filtered_files)
